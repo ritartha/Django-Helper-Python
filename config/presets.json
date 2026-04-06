@@ -1,0 +1,30 @@
+{
+    "blank": {
+        "name": "Blank Project",
+        "description": "A minimal Django project with no extras.",
+        "dependencies": ["django"],
+        "apps": [],
+        "features": []
+    },
+    "blog": {
+        "name": "Blog Starter",
+        "description": "A blog application with posts, categories, and tags.",
+        "dependencies": ["django", "Pillow", "django-crispy-forms"],
+        "apps": ["blog", "accounts"],
+        "features": ["auth", "media"]
+    },
+    "ecommerce": {
+        "name": "E-Commerce Starter",
+        "description": "An e-commerce application with products, cart, and orders.",
+        "dependencies": ["django", "djangorestframework", "Pillow", "stripe", "django-crispy-forms"],
+        "apps": ["products", "cart", "orders", "accounts"],
+        "features": ["auth", "drf", "media", "payments"]
+    },
+    "api": {
+        "name": "REST API Project",
+        "description": "A Django REST Framework API project.",
+        "dependencies": ["django", "djangorestframework", "django-cors-headers", "django-filter", "drf-spectacular"],
+        "apps": ["api", "accounts"],
+        "features": ["drf", "cors", "auth"]
+    }
+}

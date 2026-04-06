@@ -1,0 +1,1 @@
+"""GUI package for Django Dev Assistant."""

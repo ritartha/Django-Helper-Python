@@ -1,0 +1,1 @@
+"""Panel modules — each panel is a swappable CTkFrame shown in the main content area."""
