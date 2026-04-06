@@ -146,18 +146,16 @@ class ModelPanel(ctk.CTkScrollableFrame):
             ConfirmDialog.error("App Not Found", f"The app '{app_name}' does not exist in the project.")
             return
 
-        threading.Thread(
-            target=self.mg.generate,
-            kwargs={
-                "model_name": model_name,
-                "fields": self.fields.copy(),
-                "app_path": app_path,
-                "register_admin": self.admin_var.get(),
-                "run_migrations": False,
-                "project_path": self.app.project_path,
-                "venv_name": self.app.venv_name,
-            },
-            daemon=True,
-        ).start()
+        def _do_generate():
+            self.mg.generate(
+                model_name=model_name,
+                fields=self.fields.copy(),
+                app_path=app_path,
+                register_admin=self.admin_var.get(),
+                run_migrations=False,
+                project_path=self.app.project_path,
+                venv_name=self.app.venv_name,
+            )
+            self.after(0, lambda: ConfirmDialog.info("Success", f"Model '{model_name}' generated in {app_name}/models.py"))
 
-        ConfirmDialog.info("Success", f"Model '{model_name}' generated in {app_name}/models.py")
+        threading.Thread(target=_do_generate, daemon=True).start()

@@ -119,9 +119,14 @@ class ViewPanel(ctk.CTkScrollableFrame):
 
         if os.path.exists(views_path):
             existing = FileHandler.read(views_path)
-            # Strip duplicate imports from the generated code before appending
+            existing_lines = set(existing.splitlines())
             code_lines = code.split("\n")
-            new_lines = [l for l in code_lines if not l.startswith(("from ", "import ")) or l not in existing]
+            new_lines = []
+            for l in code_lines:
+                stripped = l.strip()
+                if stripped.startswith(("from ", "import ")) and stripped in existing_lines:
+                    continue  # Skip duplicate import lines
+                new_lines.append(l)
             FileHandler.append(views_path, "\n\n" + "\n".join(new_lines), backup=True)
         else:
             FileHandler.write(views_path, code, backup=False)
