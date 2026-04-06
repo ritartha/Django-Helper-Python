@@ -22,14 +22,10 @@ class SettingsManager:
         """Apply development‑friendly settings."""
         self.log("🔧 Switching to Development mode...")
         content = FileHandler.read(settings_path)
-
-        content = CodeParser.modify_setting(settings_path, "DEBUG", "True")
-        FileHandler.write(settings_path, content, backup=True)
-
-        content = FileHandler.read(settings_path)
-        content = CodeParser.modify_setting(settings_path, "ALLOWED_HOSTS", "['*']")
-        FileHandler.write(settings_path, content, backup=True)
-
+        FileHandler.create_backup(settings_path)
+        content = CodeParser.modify_setting_from_content(content, "DEBUG", "True")
+        content = CodeParser.modify_setting_from_content(content, "ALLOWED_HOSTS", "['*']")
+        FileHandler.write(settings_path, content, backup=False)
         self.log("✓ Development mode activated (DEBUG=True)")
 
     def set_production_mode(self, settings_path: str) -> None:
@@ -50,15 +46,14 @@ class SettingsManager:
             "SECURE_HSTS_PRELOAD": "True",
         }
 
-        for setting, value in modifications.items():
-            content = CodeParser.modify_setting(settings_path, setting, value)
-            FileHandler.write(settings_path, content, backup=True)
-
-        # Add STATIC_ROOT if missing
+        # Read file once, apply all changes in-memory, write once
         content = FileHandler.read(settings_path)
+        FileHandler.create_backup(settings_path)
+        for setting, value in modifications.items():
+            content = CodeParser.modify_setting_from_content(content, setting, value)
         if "STATIC_ROOT" not in content:
             content += "\nSTATIC_ROOT = BASE_DIR / 'staticfiles'\n"
-            FileHandler.write(settings_path, content, backup=True)
+        FileHandler.write(settings_path, content, backup=False)
 
         self.log("✓ Production mode activated (DEBUG=False, security hardened)")
 
@@ -138,7 +133,8 @@ CORS_ALLOW_CREDENTIALS = True
 """
             FileHandler.write(path, content, backup=True)
 
-        # Add CorsMiddleware
+        # Re-read to ensure we have the latest content before checking middleware
+        content = FileHandler.read(path)
         if "corsheaders.middleware.CorsMiddleware" not in content:
             content = content.replace(
                 "'django.middleware.common.CommonMiddleware',",

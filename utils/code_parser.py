@@ -147,33 +147,35 @@ class CodeParser:
         return "\n".join(lines)
 
     @staticmethod
-    def modify_setting(filepath: str, setting_name: str, new_value: str) -> str:
+    def modify_setting_from_content(content: str, setting_name: str, new_value: str) -> str:
         """
-        Modify a top-level setting assignment in settings.py.
-        For example: modify_setting(path, 'DEBUG', 'False')
+        Modify a top-level setting assignment in a settings.py content string.
+        Operates entirely in memory — no file I/O.
         """
-        with open(filepath, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-
-        modified = False
+        lines = content.splitlines(keepends=True)
         result = []
         skip_continuation = False
+        modified = False
 
         for line in lines:
             if skip_continuation:
-                # Skip multi-line values (e.g., lists)
-                if line.strip().endswith("]") or line.strip().endswith("}") or line.strip().endswith(")"):
+                stripped = line.strip()
+                # Check if this line closes the multi-line block
+                if stripped.endswith("]") or stripped.endswith("}") or stripped.endswith(")"):
                     skip_continuation = False
+                # Skip this old continuation line (including the closing line)
                 continue
 
             stripped = line.strip()
             if stripped.startswith(f"{setting_name} ") or stripped.startswith(f"{setting_name}="):
                 result.append(f"{setting_name} = {new_value}\n")
                 modified = True
-                # Check if value spans multiple lines
-                if any(c in new_value for c in ["[", "{", "("]):
-                    if not any(c in new_value for c in ["]", "}", ")"]):
-                        skip_continuation = True
+                # If the OLD value spans multiple lines, skip them
+                eq_idx = stripped.index("=") + 1
+                old_value_part = stripped[eq_idx:]
+                if any(c in old_value_part for c in ["[", "{", "("]) and \
+                   not any(c in old_value_part for c in ["]", "}", ")"]):
+                    skip_continuation = True
             else:
                 result.append(line)
 
@@ -181,3 +183,13 @@ class CodeParser:
             result.append(f"\n{setting_name} = {new_value}\n")
 
         return "".join(result)
+
+    @staticmethod
+    def modify_setting(filepath: str, setting_name: str, new_value: str) -> str:
+        """
+        Modify a top-level setting assignment in settings.py.
+        For example: modify_setting(path, 'DEBUG', 'False')
+        """
+        with open(filepath, "r", encoding="utf-8") as f:
+            content = f.read()
+        return CodeParser.modify_setting_from_content(content, setting_name, new_value)

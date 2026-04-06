@@ -138,5 +138,5 @@ class CommandExecutor:
             full_cmd = f'"{activate}" && {command}'
         else:
             activate = os.path.join(venv_path, "bin", "activate")
-            full_cmd = f'source "{activate}" && {command}'
+            full_cmd = f'. "{activate}" && {command}'
         return self.run(full_cmd, cwd=cwd)

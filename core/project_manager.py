@@ -77,14 +77,16 @@ class ProjectManager:
         return result
 
     def start_server(self, project_path: str, port: int = 8000, venv_name: str = "venv") -> None:
-        """Start the Django development server in a background thread."""
+        """Start the Django development server in a non-blocking background thread."""
         self.log(f"🚀 Starting development server on port {port}...")
         venv_path = os.path.join(project_path, venv_name)
-        self.executor.run_with_venv(
-            f"python manage.py runserver {port}",
-            venv_path,
-            cwd=project_path,
-        )
+        if os.name == "nt":
+            activate = os.path.join(venv_path, "Scripts", "activate.bat")
+            cmd = f'"{activate}" && python manage.py runserver {port}'
+        else:
+            activate = os.path.join(venv_path, "bin", "activate")
+            cmd = f'. "{activate}" && python manage.py runserver {port}'
+        self.executor.run_async(cmd, cwd=project_path)
 
     def generate_requirements(self, project_path: str, venv_name: str = "venv") -> CommandResult:
         """Generate requirements.txt using pip freeze."""
