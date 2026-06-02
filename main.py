@@ -9,9 +9,7 @@ import os
 
 # Ensure the project root is on sys.path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
 from gui.app import DjangoDevAssistant
-
 
 def main():
     """Launch the Django Dev Assistant application."""
